@@ -34,4 +34,5 @@ fs.createReadStream(FILETOUPLOAD).pipe(up);
 ```
 
 License MIT
+
 Copyright (c) 2016 Alexey Novikov
