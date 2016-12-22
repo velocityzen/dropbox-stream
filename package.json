@@ -1,0 +1,31 @@
+{
+  "name": "dropbox-stream",
+  "version": "1.0.0",
+  "description": "Upload stream for dropbox",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/velocityzen/dropbox-stream.git"
+  },
+  "keywords": [
+    "dropbox",
+    "api",
+    "stream",
+    "upload",
+    "large",
+    "file",
+    "big"
+  ],
+  "author": "Alexey Novikov <v@2dubs.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/velocityzen/dropbox-stream/issues"
+  },
+  "homepage": "https://github.com/velocityzen/dropbox-stream#readme",
+  "dependencies": {
+    "hyperquest": "^2.1.2"
+  }
+}
