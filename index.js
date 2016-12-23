@@ -24,6 +24,12 @@ DropboxUploadStream.prototype.checkBuffer = function(chunk) {
   return this.buffer.length >= this.chunkSize;
 };
 
+DropboxUploadStream.prototype.progress = function() {
+  this.offset += this.buffer.length;
+  this.emit('progress', this.offset);
+  this.buffer = undefined;
+};
+
 DropboxUploadStream.prototype._transform = function(chunk, encoding, cb) {
   if (!this.checkBuffer(chunk)) {
     return cb();
@@ -41,8 +47,7 @@ DropboxUploadStream.prototype._transform = function(chunk, encoding, cb) {
       }
 
       this.session = res.session_id;
-      this.offset += this.buffer.length;
-      this.buffer = undefined;
+      this.progress();
       cb();
     });
 
@@ -65,8 +70,7 @@ DropboxUploadStream.prototype._transform = function(chunk, encoding, cb) {
       return cb(err);
     }
 
-    this.offset += this.buffer.length;
-    this.buffer = undefined;
+    this.progress();
     cb();
   });
 };
@@ -87,12 +91,12 @@ DropboxUploadStream.prototype._flush = function(cb) {
       }
     }
   }, (err, res) => {
-    this.buffer = undefined;
-
     if (err) {
+      this.buffer = undefined;
       return cb(err);
     }
 
+    this.progress();
     this.emit('done', res);
     cb();
   })

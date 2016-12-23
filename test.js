@@ -4,7 +4,7 @@ const path = require('path');
 const api = require('./api');
 const db = require('./index');
 
-const FILETOUPLOAD = ''
+const FILETOUPLOAD = '';
 const TOKEN = '';
 
 api({
@@ -26,11 +26,8 @@ let up = db.createDropboxUploadStream({
 });
 
 up
-  .on('done', res => {
-    console.log('Success', res);
-  })
-  .on('error', err => {
-    console.log(err);
-  })
+  .on('done', res => console.log('Success', res))
+  .on('progress', res => console.log(res))
+  .on('error', err => console.log(err))
 
 fs.createReadStream(FILETOUPLOAD).pipe(up);
