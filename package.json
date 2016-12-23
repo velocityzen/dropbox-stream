@@ -1,6 +1,6 @@
 {
   "name": "dropbox-stream",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Upload stream for dropbox",
   "main": "index.js",
   "scripts": {
