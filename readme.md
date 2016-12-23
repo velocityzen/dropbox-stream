@@ -1,12 +1,16 @@
 # Dropbox Stream
 
-Stream that uploads files to dropbox using upload session API
+Streams to upload and download files from [Dropbox](https://dropbox.com)
 
 ## Install
 
 `npm i dropbox-stream`
 
 ## Usage
+
+### Upload
+
+Uploading files to dropbox using upload session API
 
 ```js
 const db = require('dropbox-stream');
@@ -25,6 +29,25 @@ let up = db.createDropboxUploadStream({
   .on('error', err => console.log(err))
 
 fs.createReadStream(FILETOUPLOAD).pipe(up);
+
+```
+
+### Download
+
+```js
+const db = require('dropbox-stream');
+
+const TOKEN = 'put your dropbox token here';
+const FILETODOWNLOAD = '/some/file.txt';
+const FILETODOWNLOADTO = './file.txt';
+
+db.createDropboxDownloadStream({
+  token: TOKEN,
+  filepath: FILETODOWNLOAD
+})
+.on('metadata', metadata => console.log('Metadata', metadata))
+.on('error', err => console.log(err))
+.pipe(fs.createWriteStream(FILETODOWNLOADTO));
 
 ```
 

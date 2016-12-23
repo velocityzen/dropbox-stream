@@ -1,32 +1,55 @@
 'use strict';
 const hyperquest = require('hyperquest');
 
-const apiBase = 'https://content.dropboxapi.com/2/';
+const apiBase = 'https://content.dropboxapi.com/2';
 const api = {
   base: apiBase,
-  upload: apiBase + 'files/upload',
-  uploadStart: apiBase + 'files/upload_session/start',
-  uploadAppend: apiBase + 'files/upload_session/append_v2',
-  uploadFinish: apiBase + 'files/upload_session/finish'
+  download: apiBase + '/files/download',
+  upload: apiBase + '/files/upload',
+  uploadStart: apiBase + '/files/upload_session/start',
+  uploadAppend: apiBase + '/files/upload_session/append_v2',
+  uploadFinish: apiBase + '/files/upload_session/finish'
 }
 
-let parseResponse = function(cb) {
+let safeJsonParse = function(data) {
+  if (!data) {
+    return;
+  }
+
+  try {
+    let parsedData = JSON.parse(data);
+    return parsedData;
+  } catch (e) {
+    return new Error(`Response parsing failed: ${e.message}`);
+  }
+}
+
+let parseResponse = function(cb, isDownload) {
   return res => {
     const statusCode = res.statusCode;
-    const contentType = res.headers['content-type'];
 
-    let error;
     if (statusCode !== 200) {
-      error = new Error(`Request Failed.\nStatus Code: ${statusCode}`);
-    } else if (!/^application\/json/.test(contentType)) {
-      error = new Error(`Invalid content-type.\nExpected application/json but received ${contentType}`);
+      res.resume();
+      return cb(new Error(`Request Failed.\nStatus Code: ${statusCode}`));
     }
 
-    if (error) {
-      // consume response data to free up memory
-      res.resume();
-      cb(error)
+    if (isDownload) {
+      let rawData = res.headers['dropbox-api-result'];
+      let parsedData = safeJsonParse(rawData);
+
+      if (parsedData instanceof Error) {
+        cb(parsedData);
+      } else {
+        cb(null, parsedData);
+      }
+
       return;
+    }
+
+    const contentType = res.headers['content-type'];
+    if (!isDownload && !/^application\/json/.test(contentType)) {
+      res.resume();
+      return cb(new Error(`Invalid content-type.\nExpected application/json but received ${contentType}`));
     }
 
     res.setEncoding('utf8');
@@ -35,15 +58,12 @@ let parseResponse = function(cb) {
       rawData += chunk
     });
     res.on('end', () => {
-      if (rawData) {
-        try {
-          let parsedData = JSON.parse(rawData);
-          cb(null, parsedData);
-        } catch (e) {
-          cb(new Error(`Response parsing failed: ${e.message}`));
-        }
+      let parsedData = safeJsonParse(rawData);
+
+      if (parsedData instanceof Error) {
+        cb(parsedData);
       } else {
-        cb();
+        cb(null, parsedData);
       }
     });
   }
@@ -51,9 +71,12 @@ let parseResponse = function(cb) {
 
 module.exports = function(opts, cb) {
   let headers = {
-    'Authorization': 'Bearer ' + opts.token,
-    'Content-Type': 'application/octet-stream'
+    'Authorization': 'Bearer ' + opts.token
   };
+
+  if (opts.call !== 'download') {
+    headers['Content-Type'] = 'application/octet-stream';
+  }
 
   if (opts.args) {
     headers['Dropbox-API-Arg'] = JSON.stringify(opts.args);
@@ -64,9 +87,8 @@ module.exports = function(opts, cb) {
     headers: headers
   });
 
-  req
-    .on('response', parseResponse(cb))
-    .on('error', cb);
-
+  req.on('error', cb);
+  req.on('response', parseResponse(cb, opts.call === 'download'));
   req.end(opts.data);
+  return req;
 };
