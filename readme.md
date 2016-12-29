@@ -1,6 +1,6 @@
 # Dropbox Stream
 
-Streams to upload and download files from [Dropbox](https://dropbox.com)
+Upload & Download streams for [Dropbox](https://dropbox.com)
 
 ## Install
 
