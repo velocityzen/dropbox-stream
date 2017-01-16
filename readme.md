@@ -53,4 +53,3 @@ db.createDropboxDownloadStream({
 
 License MIT
 
-Copyright (c) 2016 Alexey Novikov
