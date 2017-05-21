@@ -31,7 +31,7 @@ DropboxUploadStream.prototype.progress = function() {
 };
 
 DropboxUploadStream.prototype._transform = function(chunk, encoding, cb) {
-  if (!this.checkBuffer(chunk)) {
+  if (!this.checkBuffer(chunk) && !!this.session) {
     return cb();
   }
 
