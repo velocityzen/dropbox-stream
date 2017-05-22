@@ -25,13 +25,13 @@ DropboxUploadStream.prototype.checkBuffer = function(chunk) {
 };
 
 DropboxUploadStream.prototype.progress = function() {
-  this.offset += this.buffer.length;
+  this.offset += this.buffer ? this.buffer.length : 0;
   this.emit('progress', this.offset);
   this.buffer = undefined;
 };
 
 DropboxUploadStream.prototype._transform = function(chunk, encoding, cb) {
-  if (!this.checkBuffer(chunk)) {
+  if (!this.checkBuffer(chunk) && !!this.session) {
     return cb();
   }
 
