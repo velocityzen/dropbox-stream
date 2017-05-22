@@ -11,20 +11,20 @@ const api = {
   uploadFinish: apiBase + '/files/upload_session/finish'
 }
 
-let safeJsonParse = function(data) {
+const safeJsonParse = function(data) {
   if (!data) {
     return;
   }
 
   try {
-    let parsedData = JSON.parse(data);
+    const parsedData = JSON.parse(data);
     return parsedData;
   } catch (e) {
     return new Error(`Response parsing failed: ${e.message}`);
   }
 }
 
-let parseResponse = function(cb, isDownload) {
+const parseResponse = function(cb, isDownload) {
   return res => {
     const statusCode = res.statusCode;
 
@@ -34,8 +34,8 @@ let parseResponse = function(cb, isDownload) {
     }
 
     if (isDownload) {
-      let rawData = res.headers['dropbox-api-result'];
-      let parsedData = safeJsonParse(rawData);
+      const rawData = res.headers['dropbox-api-result'];
+      const parsedData = safeJsonParse(rawData);
 
       if (parsedData instanceof Error) {
         cb(parsedData);
@@ -58,7 +58,7 @@ let parseResponse = function(cb, isDownload) {
       rawData += chunk
     });
     res.on('end', () => {
-      let parsedData = safeJsonParse(rawData);
+      const parsedData = safeJsonParse(rawData);
 
       if (parsedData instanceof Error) {
         cb(parsedData);
@@ -82,7 +82,7 @@ module.exports = function(opts, cb) {
     headers['Dropbox-API-Arg'] = JSON.stringify(opts.args);
   }
 
-  let req = hyperquest(api[ opts.call ], {
+  const req = hyperquest(api[ opts.call ], {
     method: 'POST',
     headers: headers
   });

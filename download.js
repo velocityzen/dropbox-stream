@@ -3,14 +3,14 @@ const inherits = require('util').inherits;
 const Transform = require('stream').Transform;
 const api = require('./api');
 
-let DropboxDownloadStream = function(opts = {}) {
+const DropboxDownloadStream = function(opts = {}) {
   Transform.call(this, opts);
   this.getStream(opts.token, opts.filepath);
 }
 inherits(DropboxDownloadStream, Transform);
 
 DropboxDownloadStream.prototype.getStream = function(token, filepath) {
-  let req = api({
+  const req = api({
     call: 'download',
     token: token,
     args: {

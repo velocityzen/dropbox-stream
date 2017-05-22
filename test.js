@@ -9,6 +9,7 @@ const FILETOUPLOAD = '';
 const FILETODOWNLOAD = '';
 const FILETODOWNLOADTO = '';
 
+//upload
 api({
   token: TOKEN,
   call: 'upload',
@@ -18,7 +19,7 @@ api({
     autorename: true
   }
 }, function(err, res) {
-  console.log(err, res);
+  console.log('Simple upload', err, res);
 });
 
 let up = db.createDropboxUploadStream({
@@ -26,16 +27,18 @@ let up = db.createDropboxUploadStream({
   filepath: '/test/' + path.basename(FILETOUPLOAD),
   chunkSize: 1000 * 1024
 })
-.on('done', res => console.log('Success', res))
-.on('progress', res => console.log(res))
-.on('error', err => console.log(err))
+.on('done', res => console.log('Stream upload success', res))
+.on('progress', res => console.log('Stream upload progress', res))
+.on('error', err => console.log('Stream upload error', err))
 
 fs.createReadStream(FILETOUPLOAD).pipe(up);
 
+//download
 db.createDropboxDownloadStream({
   token: TOKEN,
   filepath: FILETODOWNLOAD
 })
-.on('metadata', metadata => console.log('Metadata', metadata))
-.on('error', err => console.log(err))
-.pipe(fs.createWriteStream(FILETODOWNLOADTO));
+.on('metadata', metadata => console.log('Stream download metadata', metadata))
+.on('error', err => console.log('Stream download error', err))
+.pipe(fs.createWriteStream(FILETODOWNLOADTO))
+.on('finish', () => console.log('Stream download success'))

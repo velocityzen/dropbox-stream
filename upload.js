@@ -3,7 +3,7 @@ const inherits = require('util').inherits;
 const Transform = require('stream').Transform;
 const api = require('./api');
 
-let DropboxUploadStream = function(opts = {}) {
+const DropboxUploadStream = function(opts = {}) {
   Transform.call(this, opts);
   this.chunkSize = opts.chunkSize || 1000 * 1024;
   this.filepath = opts.filepath;
@@ -36,24 +36,59 @@ DropboxUploadStream.prototype._transform = function(chunk, encoding, cb) {
   }
 
   if (!this.session) {
-    api({
-      call: 'uploadStart',
-      token: this.token,
-      data: this.buffer
-    }, (err, res) => {
-      if (err) {
-        this.buffer = undefined;
-        return cb(err);
-      }
-
-      this.session = res.session_id;
-      this.progress();
-      cb();
-    });
-
-    return;
+    this.uploadStart(cb);
+  } else {
+    this.uploadAppend(cb);
   }
+};
 
+DropboxUploadStream.prototype._flush = function(cb) {
+  if (this.session) {
+    this.uploadFinish(cb);
+  } else {
+    this.upload(cb);
+  }
+};
+
+DropboxUploadStream.prototype.upload = function(cb) {
+  api({
+    call: 'upload',
+    token: this.token,
+    data: this.buffer,
+    args: {
+      path: this.filepath,
+      autorename: this.autorename
+    }
+  }, (err, res) => {
+    if (err) {
+      this.buffer = undefined;
+      return cb(err);
+    }
+
+    this.progress();
+    this.emit('done', res);
+    cb();
+  });
+};
+
+DropboxUploadStream.prototype.uploadStart = function(cb) {
+  api({
+    call: 'uploadStart',
+    token: this.token,
+    data: this.buffer
+  }, (err, res) => {
+    if (err) {
+      this.buffer = undefined;
+      return cb(err);
+    }
+
+    this.session = res.session_id;
+    this.progress();
+    cb();
+  });
+};
+
+DropboxUploadStream.prototype.uploadAppend = function(cb) {
   api({
     call: 'uploadAppend',
     token: this.token,
@@ -75,7 +110,7 @@ DropboxUploadStream.prototype._transform = function(chunk, encoding, cb) {
   });
 };
 
-DropboxUploadStream.prototype._flush = function(cb) {
+DropboxUploadStream.prototype.uploadFinish = function(cb) {
   api({
     call: 'uploadFinish',
     token: this.token,
@@ -99,7 +134,7 @@ DropboxUploadStream.prototype._flush = function(cb) {
     this.progress();
     this.emit('done', res);
     cb();
-  })
+  });
 };
 
 module.exports = {
