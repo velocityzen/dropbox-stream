@@ -25,7 +25,7 @@ DropboxUploadStream.prototype.checkBuffer = function(chunk) {
 };
 
 DropboxUploadStream.prototype.progress = function() {
-  this.offset += this.buffer.length;
+  this.offset += this.buffer ? this.buffer.length : 0;
   this.emit('progress', this.offset);
   this.buffer = undefined;
 };
