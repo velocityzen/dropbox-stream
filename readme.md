@@ -1,5 +1,8 @@
 # Dropbox Stream
 
+[![NPM Version](https://img.shields.io/npm/v/dropbox-stream.svg?style=flat-square)](https://www.npmjs.com/package/dropbox-stream)
+[![NPM Downloads](https://img.shields.io/npm/dt/dropbox-stream.svg?style=flat-square)](https://www.npmjs.com/package/dropbox-stream)
+
 Upload & Download streams for [Dropbox](https://dropbox.com)
 
 ## Install
