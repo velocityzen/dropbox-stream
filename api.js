@@ -1,5 +1,5 @@
 'use strict';
-const hyperquest = require('hyperquest');
+const got = require('got');
 
 const apiBase = 'https://content.dropboxapi.com/2';
 const api = {
@@ -10,6 +10,13 @@ const api = {
   uploadAppend: apiBase + '/files/upload_session/append_v2',
   uploadFinish: apiBase + '/files/upload_session/finish'
 }
+
+const charsToEncode = /[\u007f-\uffff]/g;
+const saveJsonStringify = obj => JSON
+  .stringify(obj)
+  .replace(charsToEncode, c => '\\u' + (
+    '000' + c.charCodeAt(0).toString(16)
+  ).slice(-4));
 
 const safeJsonParse = function(data) {
   if (!data) {
@@ -54,7 +61,7 @@ const parseResponse = function(cb, isDownload) {
 
     res.setEncoding('utf8');
     let rawData = '';
-    res.on('data', (chunk) => {
+    res.on('data', chunk => {
       rawData += chunk
     });
     res.on('end', () => {
@@ -79,11 +86,10 @@ module.exports = function(opts, cb) {
   }
 
   if (opts.args) {
-    headers['Dropbox-API-Arg'] = JSON.stringify(opts.args);
+    headers['Dropbox-API-Arg'] = saveJsonStringify(opts.args);
   }
 
-  const req = hyperquest(api[ opts.call ], {
-    method: 'POST',
+  const req = got.stream.post(api[opts.call], {
     headers: headers
   });
 

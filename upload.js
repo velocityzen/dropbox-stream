@@ -99,7 +99,7 @@ DropboxUploadStream.prototype.uploadAppend = function(cb) {
         offset: this.offset
       }
     }
-  }, (err) => {
+  }, err => {
     if (err) {
       this.buffer = undefined;
       return cb(err);
@@ -139,7 +139,5 @@ DropboxUploadStream.prototype.uploadFinish = function(cb) {
 
 module.exports = {
   DropboxUploadStream,
-  createDropboxUploadStream: opts => {
-    return new DropboxUploadStream(opts);
-  }
+  createDropboxUploadStream: opts => new DropboxUploadStream(opts)
 };

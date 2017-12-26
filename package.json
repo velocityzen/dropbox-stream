@@ -4,7 +4,7 @@
   "description": "Upload & Download streams for Dropbox",
   "main": "index.js",
   "scripts": {
-    "test": "node test.js"
+    "test": "nyc ava"
   },
   "repository": {
     "type": "git",
@@ -27,6 +27,10 @@
   },
   "homepage": "https://github.com/velocityzen/dropbox-stream#readme",
   "dependencies": {
-    "hyperquest": "^2.1.2"
+    "got": "^8.0.1"
+  },
+  "devDependencies": {
+    "ava": "^0.24.0",
+    "nyc": "^11.4.1"
   }
 }
