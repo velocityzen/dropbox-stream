@@ -13,7 +13,13 @@ Upload & Download streams for [Dropbox](https://dropbox.com)
 
 ### Upload
 
-Uploading files to dropbox using upload session API
+Uploads stream to dropbox using upload session API
+
+Events order:
+
+  1. `progress`
+  2. `metadata`
+
 
 ```js
 const db = require('dropbox-stream');
@@ -21,21 +27,30 @@ const db = require('dropbox-stream');
 const TOKEN = 'put your dropbox token here';
 const FILETOUPLOAD = '/some/file.txt';
 
-let up = db.createDropboxUploadStream({
+const up = db.createDropboxUploadStream({
     token: TOKEN,
     filepath: '/test/' + path.basename(FILETOUPLOAD),
     chunkSize: 1000 * 1024,
     autorename: true
   })
-  .on('done', res => console.log('Success', res))
-  .on('progress', res => console.log(res))
   .on('error', err => console.log(err))
+  .on('progress', res => console.log(res))
+  .on('metadata', metadata => console.log('Metadata', metadata))
 
-fs.createReadStream(FILETOUPLOAD).pipe(up);
+fs.createReadStream(FILETOUPLOAD).pipe(up)
+  .on('finish', () => console.log('This fires before metadata!'))
 
 ```
 
 ### Download
+
+Downloads to stream from dropbox.
+
+Events order:
+
+  1. `metadata`
+  2. `progress`
+
 
 ```js
 const db = require('dropbox-stream');
@@ -45,12 +60,14 @@ const FILETODOWNLOAD = '/some/file.txt';
 const FILETODOWNLOADTO = './file.txt';
 
 db.createDropboxDownloadStream({
-  token: TOKEN,
-  filepath: FILETODOWNLOAD
-})
-.on('metadata', metadata => console.log('Metadata', metadata))
-.on('error', err => console.log(err))
-.pipe(fs.createWriteStream(FILETODOWNLOADTO));
+    token: TOKEN,
+    filepath: FILETODOWNLOAD
+  })
+  .on('error', err => console.log(err))
+  .on('metadata', metadata => console.log('Metadata', metadata))
+  .on('progress', res => console.log(res))
+  .pipe(fs.createWriteStream(FILETODOWNLOADTO))
+  .on('finish', () => console.log('Done!'));
 
 ```
 

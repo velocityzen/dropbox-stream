@@ -3,9 +3,10 @@ const inherits = require('util').inherits;
 const Transform = require('stream').Transform;
 const api = require('./api');
 
-const DropboxDownloadStream = function(opts = {}) {
+const DropboxDownloadStream = function(opts) {
   Transform.call(this, opts);
   this.getStream(opts.token, opts.filepath);
+  this.offset = 0;
 }
 inherits(DropboxDownloadStream, Transform);
 
@@ -28,11 +29,13 @@ DropboxDownloadStream.prototype.getStream = function(token, filepath) {
   req.pipe(this);
 };
 
-DropboxDownloadStream.prototype._transform = (chunk, encoding, cb) => cb(null, chunk);
+DropboxDownloadStream.prototype._transform = function(chunk, encoding, cb) {
+  this.offset += chunk.length;
+  this.emit('progress', this.offset);
+  cb(null, chunk);
+}
 
 module.exports = {
   DropboxDownloadStream,
-  createDropboxDownloadStream: opts => {
-    return new DropboxDownloadStream(opts);
-  }
+  createDropboxDownloadStream: opts => new DropboxDownloadStream(opts)
 }

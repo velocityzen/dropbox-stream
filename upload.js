@@ -66,8 +66,8 @@ DropboxUploadStream.prototype.upload = function(cb) {
     }
 
     this.progress();
-    this.emit('done', res);
-    cb();
+    this.emit('metadata', res);
+    process.nextTick(() => cb());
   });
 };
 
@@ -132,8 +132,8 @@ DropboxUploadStream.prototype.uploadFinish = function(cb) {
     }
 
     this.progress();
-    this.emit('done', res);
-    cb();
+    this.emit('metadata', res);
+    process.nextTick(() => cb());
   });
 };
 
