@@ -5,7 +5,7 @@ const got = require('got');
 const api = require('./api');
 const db = require('./index');
 
-const TOKEN = '8SrkhbGXoDwAAAAAAAF5cmRvpQqAgnFItx_p10YbU1sza6kWAE-Js9TJDESJJscb';
+const TOKEN = '';
 
 test.before(() => {
   if (!TOKEN) {
