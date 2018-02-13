@@ -38,7 +38,7 @@ const up = db.createDropboxUploadStream({
   .on('metadata', metadata => console.log('Metadata', metadata))
 
 fs.createReadStream(FILETOUPLOAD).pipe(up)
-  .on('finish', () => console.log('This fires before metadata!'))
+  .on('end', () => console.log('This fires before metadata!'))
 
 ```
 
