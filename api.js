@@ -77,7 +77,7 @@ const parseResponse = function(cb, isDownload) {
 }
 
 module.exports = function(opts, cb) {
-  let headers = {
+  const headers = {
     'Authorization': 'Bearer ' + opts.token
   };
 
