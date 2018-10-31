@@ -8,7 +8,7 @@ const DropboxUploadStream = function(opts = {}) {
   this.chunkSize = opts.chunkSize || 1000 * 1024;
   this.filepath = opts.filepath;
   this.token = opts.token;
-  this.autorename = opts.autorename || true;
+  this.autorename = opts.autorename === undefined ? true : opts.autorename;
   this.session = undefined;
   this.offset = 0;
 }
