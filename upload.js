@@ -9,6 +9,7 @@ const DropboxUploadStream = function(opts = {}) {
   this.filepath = opts.filepath;
   this.token = opts.token;
   this.autorename = opts.autorename === undefined ? true : opts.autorename;
+  this.mode = opts.mode === undefined ? 'add' : opts.mode;
   this.session = undefined;
   this.offset = 0;
 }
@@ -57,7 +58,8 @@ DropboxUploadStream.prototype.upload = function(cb) {
     data: this.buffer,
     args: {
       path: this.filepath,
-      autorename: this.autorename
+      autorename: this.autorename,
+      mode: this.mode,
     }
   }, (err, res) => {
     if (err) {
