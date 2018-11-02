@@ -31,7 +31,8 @@ const up = db.createDropboxUploadStream({
     token: TOKEN,
     filepath: '/test/' + path.basename(FILETOUPLOAD),
     chunkSize: 1000 * 1024,
-    autorename: true
+    autorename: true,
+    mode: 'add'
   })
   .on('error', err => console.log(err))
   .on('progress', res => console.log(res))

@@ -90,7 +90,7 @@ module.exports = function(opts, cb) {
   }
 
   const req = got.stream.post(api[opts.call], {
-    headers: headers
+    headers,
   });
 
   req.on('error', cb);
