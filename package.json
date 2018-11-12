@@ -27,7 +27,8 @@
   },
   "homepage": "https://github.com/velocityzen/dropbox-stream#readme",
   "dependencies": {
-    "got": "^9.0.0"
+    "got": "^9.0.0",
+    "try-catch": "^2.0.0"
   },
   "devDependencies": {
     "ava": "^0.25.0",

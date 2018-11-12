@@ -1,5 +1,6 @@
 'use strict';
 const got = require('got');
+const tryCatch = require('try-catch');
 
 const apiBase = 'https://content.dropboxapi.com/2';
 const api = {
@@ -22,13 +23,13 @@ const safeJsonParse = function(data) {
   if (!data) {
     return;
   }
-
-  try {
-    const parsedData = JSON.parse(data);
-    return parsedData;
-  } catch (e) {
-    return new Error(`Response parsing failed: ${e.message}`);
-  }
+  
+  const [e, parsedData] = tryCatch(JSON.parse, data);
+  
+  if (e)
+      return [new Error(`Response parsing failed: ${e.message}`)];
+  
+  return [null, parsedData];
 }
 
 const parseResponse = function(cb, isDownload) {
@@ -42,14 +43,8 @@ const parseResponse = function(cb, isDownload) {
 
     if (isDownload) {
       const rawData = res.headers['dropbox-api-result'];
-      const parsedData = safeJsonParse(rawData);
-
-      if (parsedData instanceof Error) {
-        cb(parsedData);
-      } else {
-        cb(null, parsedData);
-      }
-
+      const [e, parsedData] = safeJsonParse(rawData);
+      cb(e, parsedData);
       return;
     }
 
@@ -65,13 +60,8 @@ const parseResponse = function(cb, isDownload) {
       rawData += chunk
     });
     res.on('end', () => {
-      const parsedData = safeJsonParse(rawData);
-
-      if (parsedData instanceof Error) {
-        cb(parsedData);
-      } else {
-        cb(null, parsedData);
-      }
+      const [e, parsedData] = safeJsonParse(rawData);
+      cb(e, parsedData);
     });
   }
 }
