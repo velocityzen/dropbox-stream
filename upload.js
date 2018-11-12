@@ -124,7 +124,8 @@ DropboxUploadStream.prototype.uploadFinish = function(cb) {
       },
       commit: {
         path: this.filepath,
-        autorename: this.autorename
+        autorename: this.autorename,
+        mode: this.mode
       }
     }
   }, (err, res) => {
