@@ -6,7 +6,7 @@ const api = require('./api');
 const DropboxUploadStream = function(opts = {}) {
   Transform.call(this, opts);
   this.chunkSize = opts.chunkSize || 1000 * 1024;
-  this.filepath = opts.filepath;
+  this.path = opts.path;
   this.token = opts.token;
   this.autorename = opts.autorename === undefined ? true : opts.autorename;
   this.mode = opts.mode === undefined ? 'add' : opts.mode;
@@ -57,9 +57,9 @@ DropboxUploadStream.prototype.upload = function(cb) {
     token: this.token,
     data: this.buffer,
     args: {
-      path: this.filepath,
+      path: this.path,
       autorename: this.autorename,
-      mode: this.mode,
+      mode: this.mode
     }
   }, (err, res) => {
     if (err) {
@@ -123,7 +123,7 @@ DropboxUploadStream.prototype.uploadFinish = function(cb) {
         offset: this.offset
       },
       commit: {
-        path: this.filepath,
+        path: this.path,
         autorename: this.autorename,
         mode: this.mode
       }

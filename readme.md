@@ -29,7 +29,7 @@ const FILETOUPLOAD = '/some/file.txt';
 
 const up = db.createDropboxUploadStream({
     token: TOKEN,
-    filepath: '/test/' + path.basename(FILETOUPLOAD),
+    path: '/test/' + path.basename(FILETOUPLOAD),
     chunkSize: 1000 * 1024,
     autorename: true,
     mode: 'add'
@@ -62,7 +62,7 @@ const FILETODOWNLOADTO = './file.txt';
 
 db.createDropboxDownloadStream({
     token: TOKEN,
-    filepath: FILETODOWNLOAD
+    path: FILETODOWNLOAD
   })
   .on('error', err => console.log(err))
   .on('metadata', metadata => console.log('Metadata', metadata))
@@ -70,6 +70,16 @@ db.createDropboxDownloadStream({
   .pipe(fs.createWriteStream(FILETODOWNLOADTO))
   .on('finish', () => console.log('Done!'));
 
+```
+
+If you want to download a file from shared link use:
+
+```js
+db.createDropboxDownloadStream({
+  token: TOKEN,
+  url: 'sharedlink',
+  path: 'optional file path if shared link is for a folder'
+})
 ```
 
 License MIT

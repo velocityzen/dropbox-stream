@@ -4,11 +4,12 @@ const got = require('got');
 const apiBase = 'https://content.dropboxapi.com/2';
 const api = {
   base: apiBase,
-  download: apiBase + '/files/download',
-  upload: apiBase + '/files/upload',
-  uploadStart: apiBase + '/files/upload_session/start',
-  uploadAppend: apiBase + '/files/upload_session/append_v2',
-  uploadFinish: apiBase + '/files/upload_session/finish'
+  download: `${apiBase}/files/download`,
+  downloadSharedLink: `${apiBase}/sharing/get_shared_link_file`,
+  upload: `${apiBase}/files/upload`,
+  uploadStart: `${apiBase}/files/upload_session/start`,
+  uploadAppend: `${apiBase}/files/upload_session/append_v2`,
+  uploadFinish: `${apiBase}/files/upload_session/finish`
 }
 
 const charsToEncode = /[\u007f-\uffff]/g;
@@ -25,9 +26,9 @@ const safeJsonParse = function(data) {
 
   try {
     const parsedData = JSON.parse(data);
-    return parsedData;
+    return [ null, parsedData ];
   } catch (e) {
-    return new Error(`Response parsing failed: ${e.message}`);
+    return [ new Error(`Response parsing failed: ${e.message}`) ];
   }
 }
 
@@ -42,14 +43,8 @@ const parseResponse = function(cb, isDownload) {
 
     if (isDownload) {
       const rawData = res.headers['dropbox-api-result'];
-      const parsedData = safeJsonParse(rawData);
-
-      if (parsedData instanceof Error) {
-        cb(parsedData);
-      } else {
-        cb(null, parsedData);
-      }
-
+      const [ e, parsedData ] = safeJsonParse(rawData);
+      cb(e, parsedData);
       return;
     }
 
@@ -65,23 +60,19 @@ const parseResponse = function(cb, isDownload) {
       rawData += chunk
     });
     res.on('end', () => {
-      const parsedData = safeJsonParse(rawData);
-
-      if (parsedData instanceof Error) {
-        cb(parsedData);
-      } else {
-        cb(null, parsedData);
-      }
+      const [ e, parsedData ] = safeJsonParse(rawData);
+      cb(e, parsedData);
     });
   }
 }
 
 module.exports = function(opts, cb) {
+  const isDownload = opts.call === 'download' || opts.call === 'downloadSharedLink';
   const headers = {
     'Authorization': 'Bearer ' + opts.token
   };
 
-  if (opts.call !== 'download') {
+  if (!isDownload) {
     headers['Content-Type'] = 'application/octet-stream';
   }
 
@@ -89,12 +80,10 @@ module.exports = function(opts, cb) {
     headers['Dropbox-API-Arg'] = saveJsonStringify(opts.args);
   }
 
-  const req = got.stream.post(api[opts.call], {
-    headers,
-  });
+  const req = got.stream.post(api[opts.call], { headers });
 
   req.on('error', cb);
-  req.on('response', parseResponse(cb, opts.call === 'download'));
+  req.on('response', parseResponse(cb, isDownload));
   req.end(opts.data);
   return req;
 };

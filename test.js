@@ -5,7 +5,7 @@ const got = require('got');
 const api = require('./api');
 const db = require('./index');
 
-const TOKEN = '';
+const TOKEN = process.env.DROPBOX_ACCESS_TOKEN;
 
 test.before(() => {
   if (!TOKEN) {
@@ -25,7 +25,7 @@ test.after.always(() => got('https://api.dropboxapi.com/2/files/delete_v2', {
 test.serial.cb('fails to download non-existent file', t => {
   db.createDropboxDownloadStream({
     token: TOKEN,
-    filepath: '/test/non.existent'
+    path: '/test/non.existent'
   })
     .on('metadata', () => t.fail())
     .on('error', err => {
@@ -61,7 +61,7 @@ test.serial.cb('downloads the file', t => {
   t.plan(4);
   db.createDropboxDownloadStream({
     token: TOKEN,
-    filepath: '/test/test.txt'
+    path: '/test/test.txt'
   })
     .on('metadata', metadata => {
       t.truthy(metadata.id);
@@ -101,7 +101,7 @@ test.serial.cb('uploads a small file with a stream', t => {
 
   const up = db.createDropboxUploadStream({
     token: TOKEN,
-    filepath: '/test/small.txt',
+    path: '/test/small.txt',
     chunkSize: 100 * 1024
   })
     .on('error', err => t.fail(err))
@@ -121,7 +121,7 @@ test.serial.cb('uploads a big file with session api', t => {
 
   const up = db.createDropboxUploadStream({
     token: TOKEN,
-    filepath: '/test/big.txt',
+    path: '/test/big.txt',
     chunkSize: 10 * 1024
   })
     .on('error', err => t.fail(err))
@@ -140,7 +140,51 @@ test.serial.cb('downloads a big file', t => {
   t.plan(18);
   db.createDropboxDownloadStream({
     token: TOKEN,
-    filepath: '/test/big.txt'
+    path: '/test/big.txt'
+  })
+    .on('metadata', metadata => {
+      t.truthy(metadata.id);
+      t.is(metadata.path_lower, '/test/big.txt');
+      t.is(metadata.name, 'big.txt');
+    })
+    .on('progress', res => t.truthy(res))
+    .on('error', err => t.fail(err))
+    .pipe(fs.createWriteStream('./test.txt'))
+    .on('finish', () => {
+      t.pass();
+      t.end();
+    })
+});
+
+
+let sharedLink;
+test.serial('creates a shared link to big file', t => got(
+  'https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings',
+  {
+    headers: { 'Authorization': `Bearer ${TOKEN}` },
+    method: 'POST',
+    json: true,
+    body: {
+      path: '/test/big.txt',
+      settings: {
+        requested_visibility: 'public'
+      }
+    }
+  })
+  .then(res => {
+    sharedLink = res.body;
+    t.is(sharedLink['.tag'], 'file');
+    t.truthy(sharedLink.id);
+    t.truthy(sharedLink.url);
+    t.pass();
+  })
+)
+
+test.serial.cb('downloads a big file from a shared link', t => {
+  t.plan(18);
+  db.createDropboxDownloadStream({
+    token: TOKEN,
+    url: sharedLink.url
   })
     .on('metadata', metadata => {
       t.truthy(metadata.id);
