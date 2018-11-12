@@ -4,6 +4,7 @@
   "description": "Upload & Download streams for Dropbox",
   "main": "index.js",
   "scripts": {
+    "lint" :"eslint *.js",
     "test": "nyc ava"
   },
   "repository": {
@@ -31,6 +32,7 @@
   },
   "devDependencies": {
     "ava": "^0.25.0",
+    "eslint": "^5.9.0",
     "nyc": "^13.0.0"
   }
 }
