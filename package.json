@@ -32,7 +32,6 @@
   },
   "devDependencies": {
     "ava": "^2.1.0",
-    "eslint": "^6.0.0",
     "nyc": "^14.1.1"
   }
 }

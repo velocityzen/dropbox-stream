@@ -117,7 +117,7 @@ test.serial.cb('uploads a small file with a stream', t => {
 });
 
 test.serial.cb('uploads a big file with session api', t => {
-  t.plan(8);
+  t.plan(7);
 
   const up = db.createDropboxUploadStream({
     token: TOKEN,
@@ -137,7 +137,7 @@ test.serial.cb('uploads a big file with session api', t => {
 });
 
 test.serial.cb('downloads a big file', t => {
-  t.plan(18);
+  t.plan(17);
   db.createDropboxDownloadStream({
     token: TOKEN,
     path: '/test/big.txt'
@@ -181,7 +181,7 @@ test.serial('creates a shared link to big file', t => got(
 )
 
 test.serial.cb('downloads a big file from a shared link', t => {
-  t.plan(18);
+  t.plan(17);
   db.createDropboxDownloadStream({
     token: TOKEN,
     url: sharedLink.url
