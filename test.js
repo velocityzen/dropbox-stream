@@ -137,7 +137,7 @@ test.serial.cb('uploads a big file with session api', t => {
 });
 
 test.serial.cb('downloads a big file', t => {
-  t.plan(17);
+  t.plan(15);
   db.createDropboxDownloadStream({
     token: TOKEN,
     path: '/test/big.txt'
@@ -181,7 +181,7 @@ test.serial('creates a shared link to big file', t => got(
 )
 
 test.serial.cb('downloads a big file from a shared link', t => {
-  t.plan(17);
+  t.plan(15);
   db.createDropboxDownloadStream({
     token: TOKEN,
     url: sharedLink.url
