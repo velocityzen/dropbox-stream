@@ -7,4 +7,4 @@ module.exports = {
   createDropboxUploadStream: upload.createDropboxUploadStream,
   DropboxDownloadStream: download.DropboxDownloadStream,
   createDropboxDownloadStream: download.createDropboxDownloadStream
-}
+};

@@ -7,7 +7,7 @@ const DropboxDownloadStream = function(opts) {
   Transform.call(this, opts);
   this.getStream(opts);
   this.offset = 0;
-}
+};
 inherits(DropboxDownloadStream, Transform);
 
 DropboxDownloadStream.prototype.getStream = function({ token, url, path }) {
@@ -40,9 +40,9 @@ DropboxDownloadStream.prototype._transform = function(chunk, encoding, cb) {
   this.offset += chunk.length;
   this.emit('progress', this.offset);
   cb(null, chunk);
-}
+};
 
 module.exports = {
   DropboxDownloadStream,
   createDropboxDownloadStream: opts => new DropboxDownloadStream(opts)
-}
+};

@@ -12,14 +12,14 @@ const DropboxUploadStream = function(opts = {}) {
   this.mode = opts.mode === undefined ? 'add' : opts.mode;
   this.session = undefined;
   this.offset = 0;
-}
+};
 inherits(DropboxUploadStream, Transform);
 
 DropboxUploadStream.prototype.checkBuffer = function(chunk) {
   if (!this.buffer) {
     this.buffer = Buffer.from(chunk);
   } else {
-    this.buffer = Buffer.concat([ this.buffer, chunk ]);
+    this.buffer = Buffer.concat([this.buffer, chunk]);
   }
 
   return this.buffer.length >= this.chunkSize;
@@ -52,92 +52,104 @@ DropboxUploadStream.prototype._flush = function(cb) {
 };
 
 DropboxUploadStream.prototype.upload = function(cb) {
-  api({
-    call: 'upload',
-    token: this.token,
-    data: this.buffer,
-    args: {
-      path: this.path,
-      autorename: this.autorename,
-      mode: this.mode
-    }
-  }, (err, res) => {
-    if (err) {
-      this.buffer = undefined;
-      return cb(err);
-    }
-
-    this.progress();
-    this.emit('metadata', res);
-    process.nextTick(() => cb());
-  });
-};
-
-DropboxUploadStream.prototype.uploadStart = function(cb) {
-  api({
-    call: 'uploadStart',
-    token: this.token,
-    data: this.buffer
-  }, (err, res) => {
-    if (err) {
-      this.buffer = undefined;
-      return cb(err);
-    }
-
-    this.session = res.session_id;
-    this.progress();
-    cb();
-  });
-};
-
-DropboxUploadStream.prototype.uploadAppend = function(cb) {
-  api({
-    call: 'uploadAppend',
-    token: this.token,
-    data: this.buffer,
-    args: {
-      cursor: {
-        session_id: this.session,
-        offset: this.offset
-      }
-    }
-  }, err => {
-    if (err) {
-      this.buffer = undefined;
-      return cb(err);
-    }
-
-    this.progress();
-    cb();
-  });
-};
-
-DropboxUploadStream.prototype.uploadFinish = function(cb) {
-  api({
-    call: 'uploadFinish',
-    token: this.token,
-    data: this.buffer,
-    args: {
-      cursor: {
-        session_id: this.session,
-        offset: this.offset
-      },
-      commit: {
+  api(
+    {
+      call: 'upload',
+      token: this.token,
+      data: this.buffer,
+      args: {
         path: this.path,
         autorename: this.autorename,
         mode: this.mode
       }
-    }
-  }, (err, res) => {
-    if (err) {
-      this.buffer = undefined;
-      return cb(err);
-    }
+    },
+    (err, res) => {
+      if (err) {
+        this.buffer = undefined;
+        return cb(err);
+      }
 
-    this.progress();
-    this.emit('metadata', res);
-    process.nextTick(() => cb());
-  });
+      this.progress();
+      this.emit('metadata', res);
+      process.nextTick(() => cb());
+    }
+  );
+};
+
+DropboxUploadStream.prototype.uploadStart = function(cb) {
+  api(
+    {
+      call: 'uploadStart',
+      token: this.token,
+      data: this.buffer
+    },
+    (err, res) => {
+      if (err) {
+        this.buffer = undefined;
+        return cb(err);
+      }
+
+      this.session = res.session_id;
+      this.progress();
+      cb();
+    }
+  );
+};
+
+DropboxUploadStream.prototype.uploadAppend = function(cb) {
+  api(
+    {
+      call: 'uploadAppend',
+      token: this.token,
+      data: this.buffer,
+      args: {
+        cursor: {
+          session_id: this.session,
+          offset: this.offset
+        }
+      }
+    },
+    err => {
+      if (err) {
+        this.buffer = undefined;
+        return cb(err);
+      }
+
+      this.progress();
+      cb();
+    }
+  );
+};
+
+DropboxUploadStream.prototype.uploadFinish = function(cb) {
+  api(
+    {
+      call: 'uploadFinish',
+      token: this.token,
+      data: this.buffer,
+      args: {
+        cursor: {
+          session_id: this.session,
+          offset: this.offset
+        },
+        commit: {
+          path: this.path,
+          autorename: this.autorename,
+          mode: this.mode
+        }
+      }
+    },
+    (err, res) => {
+      if (err) {
+        this.buffer = undefined;
+        return cb(err);
+      }
+
+      this.progress();
+      this.emit('metadata', res);
+      process.nextTick(() => cb());
+    }
+  );
 };
 
 module.exports = {

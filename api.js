@@ -10,14 +10,14 @@ const api = {
   uploadStart: `${apiBase}/files/upload_session/start`,
   uploadAppend: `${apiBase}/files/upload_session/append_v2`,
   uploadFinish: `${apiBase}/files/upload_session/finish`
-}
+};
 
 const charsToEncode = /[\u007f-\uffff]/g;
-const saveJsonStringify = obj => JSON
-  .stringify(obj)
-  .replace(charsToEncode, c => '\\u' + (
-    '000' + c.charCodeAt(0).toString(16)
-  ).slice(-4));
+const saveJsonStringify = obj =>
+  JSON.stringify(obj).replace(
+    charsToEncode,
+    c => '\\u' + ('000' + c.charCodeAt(0).toString(16)).slice(-4)
+  );
 
 const safeJsonParse = function(data) {
   if (!data) {
@@ -26,11 +26,11 @@ const safeJsonParse = function(data) {
 
   try {
     const parsedData = JSON.parse(data);
-    return [ null, parsedData ];
+    return [null, parsedData];
   } catch (e) {
-    return [ new Error(`Response parsing failed: ${e.message}`) ];
+    return [new Error(`Response parsing failed: ${e.message}`)];
   }
-}
+};
 
 const parseResponse = function(cb, isDownload) {
   return res => {
@@ -38,12 +38,15 @@ const parseResponse = function(cb, isDownload) {
 
     if (statusCode !== 200) {
       res.resume();
-      return cb(new Error(`Request Failed.\nStatus Code: ${statusCode}`));
+      const error = new Error(`Request failed with status code: ${statusCode}`);
+      error.name = 'HTTPError';
+      error.statusCode = statusCode;
+      return cb(error);
     }
 
     if (isDownload) {
       const rawData = res.headers['dropbox-api-result'];
-      const [ e, parsedData ] = safeJsonParse(rawData);
+      const [e, parsedData] = safeJsonParse(rawData);
       cb(e, parsedData);
       return;
     }
@@ -51,25 +54,30 @@ const parseResponse = function(cb, isDownload) {
     const contentType = res.headers['content-type'];
     if (!isDownload && !/^application\/json/.test(contentType)) {
       res.resume();
-      return cb(new Error(`Invalid content-type.\nExpected application/json but received ${contentType}`));
+      return cb(
+        new Error(
+          `Invalid content-type. Expected application/json but received ${contentType}`
+        )
+      );
     }
 
     res.setEncoding('utf8');
     let rawData = '';
     res.on('data', chunk => {
-      rawData += chunk
+      rawData += chunk;
     });
     res.on('end', () => {
-      const [ e, parsedData ] = safeJsonParse(rawData);
+      const [e, parsedData] = safeJsonParse(rawData);
       cb(e, parsedData);
     });
-  }
-}
+  };
+};
 
 module.exports = function(opts, cb) {
-  const isDownload = opts.call === 'download' || opts.call === 'downloadSharedLink';
+  const isDownload =
+    opts.call === 'download' || opts.call === 'downloadSharedLink';
   const headers = {
-    'Authorization': 'Bearer ' + opts.token
+    Authorization: 'Bearer ' + opts.token
   };
 
   if (!isDownload) {
@@ -80,7 +88,10 @@ module.exports = function(opts, cb) {
     headers['Dropbox-API-Arg'] = saveJsonStringify(opts.args);
   }
 
-  const req = got.stream.post(api[opts.call], { headers });
+  const req = got.stream.post(api[opts.call], {
+    headers,
+    throwHttpErrors: false
+  });
 
   req.on('error', cb);
   req.on('response', parseResponse(cb, isDownload));

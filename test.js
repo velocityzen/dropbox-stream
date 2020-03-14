@@ -13,14 +13,15 @@ test.before(() => {
   }
 });
 
-test.after.always(() => got('https://api.dropboxapi.com/2/files/delete_v2', {
-  headers: {
-    'Authorization': `Bearer ${TOKEN}`,
-    'Content-Type': 'application/json'
-  },
-  method: 'POST',
-  body: '{"path":"/test"}'
-}));
+test.after.always(() =>
+  got('https://api.dropboxapi.com/2/files/delete_v2', {
+    headers: {
+      Authorization: `Bearer ${TOKEN}`
+    },
+    method: 'POST',
+    json: { path: '/test' }
+  })
+);
 
 test.serial.cb('fails to download non-existent file', t => {
   db.createDropboxDownloadStream({
@@ -28,33 +29,36 @@ test.serial.cb('fails to download non-existent file', t => {
     path: '/test/non.existent'
   })
     .on('metadata', () => t.fail())
-    .on('error', err => {
-      t.is(err.name, 'HTTPError')
-      t.is(err.statusCode, 409)
+    .on('error', error => {
+      t.is(error.name, 'HTTPError');
+      t.is(error.statusCode, 409);
       t.end();
     })
     .pipe(fs.createWriteStream('./test.txt'));
 });
 
 test.serial.cb('uploads a file to dropbox with simple upload api', t => {
-  api({
-    token: TOKEN,
-    call: 'upload',
-    data: 'TEST',
-    args: {
-      path: '/test/test.txt',
-      autorename: true
-    }
-  }, (err, res) => {
-    if (err) {
-      return t.fail(err);
-    }
+  api(
+    {
+      token: TOKEN,
+      call: 'upload',
+      data: 'TEST',
+      args: {
+        path: '/test/test.txt',
+        autorename: true
+      }
+    },
+    (err, res) => {
+      if (err) {
+        return t.fail(err);
+      }
 
-    t.truthy(res.id);
-    t.is(res.path_lower, '/test/test.txt');
-    t.is(res.name, 'test.txt');
-    t.end();
-  });
+      t.truthy(res.id);
+      t.is(res.path_lower, '/test/test.txt');
+      t.is(res.name, 'test.txt');
+      t.end();
+    }
+  );
 });
 
 test.serial.cb('downloads the file', t => {
@@ -73,37 +77,41 @@ test.serial.cb('downloads the file', t => {
     .on('finish', () => {
       t.pass();
       t.end();
-    })
+    });
 });
 
 test.serial.cb('uploads a file with none ASCII name', t => {
-  api({
-    token: TOKEN,
-    call: 'upload',
-    data: 'TEST',
-    args: {
-      path: '/test/测试.txt',
-      autorename: true
+  api(
+    {
+      token: TOKEN,
+      call: 'upload',
+      data: 'TEST',
+      args: {
+        path: '/test/测试.txt',
+        autorename: true
+      }
+    },
+    (err, res) => {
+      if (err) {
+        return t.fail(err);
+      }
+      t.truthy(res.id);
+      t.is(res.path_lower, '/test/测试.txt');
+      t.is(res.name, '测试.txt');
+      t.end();
     }
-  }, (err, res) => {
-    if (err) {
-      return t.fail(err);
-    }
-    t.truthy(res.id);
-    t.is(res.path_lower, '/test/测试.txt');
-    t.is(res.name, '测试.txt');
-    t.end();
-  });
+  );
 });
 
 test.serial.cb('uploads a small file with a stream', t => {
   t.plan(4);
 
-  const up = db.createDropboxUploadStream({
-    token: TOKEN,
-    path: '/test/small.txt',
-    chunkSize: 100 * 1024
-  })
+  const up = db
+    .createDropboxUploadStream({
+      token: TOKEN,
+      path: '/test/small.txt',
+      chunkSize: 100 * 1024
+    })
     .on('error', err => t.fail(err))
     .on('progress', res => t.truthy(res))
     .on('metadata', metadata => {
@@ -117,13 +125,14 @@ test.serial.cb('uploads a small file with a stream', t => {
 });
 
 test.serial.cb('uploads a big file with session api', t => {
-  t.plan(7);
+  t.plan(6);
 
-  const up = db.createDropboxUploadStream({
-    token: TOKEN,
-    path: '/test/big.txt',
-    chunkSize: 10 * 1024
-  })
+  const up = db
+    .createDropboxUploadStream({
+      token: TOKEN,
+      path: '/test/big.txt',
+      chunkSize: 10 * 1024
+    })
     .on('error', err => t.fail(err))
     .on('progress', res => t.truthy(res))
     .on('metadata', metadata => {
@@ -137,7 +146,7 @@ test.serial.cb('uploads a big file with session api', t => {
 });
 
 test.serial.cb('downloads a big file', t => {
-  t.plan(15);
+  t.plan(12);
   db.createDropboxDownloadStream({
     token: TOKEN,
     path: '/test/big.txt'
@@ -153,35 +162,32 @@ test.serial.cb('downloads a big file', t => {
     .on('finish', () => {
       t.pass();
       t.end();
-    })
+    });
 });
 
-
 let sharedLink;
-test.serial('creates a shared link to big file', t => got(
-  'https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings',
-  {
-    headers: { 'Authorization': `Bearer ${TOKEN}` },
+test.serial('creates a shared link to big file', t =>
+  got('https://api.dropboxapi.com/2/sharing/create_shared_link_with_settings', {
+    headers: { Authorization: `Bearer ${TOKEN}` },
     method: 'POST',
-    json: true,
-    body: {
+    json: {
       path: '/test/big.txt',
       settings: {
         requested_visibility: 'public'
       }
-    }
-  })
-  .then(res => {
+    },
+    responseType: 'json'
+  }).then(res => {
     sharedLink = res.body;
     t.is(sharedLink['.tag'], 'file');
     t.truthy(sharedLink.id);
     t.truthy(sharedLink.url);
     t.pass();
   })
-)
+);
 
 test.serial.cb('downloads a big file from a shared link', t => {
-  t.plan(15);
+  t.plan(12);
   db.createDropboxDownloadStream({
     token: TOKEN,
     url: sharedLink.url
@@ -197,7 +203,7 @@ test.serial.cb('downloads a big file from a shared link', t => {
     .on('finish', () => {
       t.pass();
       t.end();
-    })
+    });
 });
 
 test.serial.cb('deletes temporary file', t => {
@@ -208,4 +214,4 @@ test.serial.cb('deletes temporary file', t => {
 
     t.end();
   });
-})
+});
